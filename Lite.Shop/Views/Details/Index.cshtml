@@ -1,0 +1,15 @@
+@model Lite.Shop.Models.Product
+
+@{
+    ViewBag.Title = "Chi tiết sản phẩm";
+}
+
+@if (Model != null)
+{
+    <h2>@Model.ProductName</h2>
+    <p>Giá: @Model.Price</p>
+}
+else
+{
+    <p>Không tìm thấy sản phẩm</p>
+}

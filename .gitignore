@@ -1,0 +1,28 @@
+## Thư mục build (Rác phát sinh khi chạy code)
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+
+## File cấu hình của Visual Studio & VS Code
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+## File tạm của hệ điều hành
+.DS_Store
+Thumbs.db
+
+## File nén và backup
+*.zip
+*.7z
+*.rar
+*.bak
+
+## Các file log
+*.log
+
+## Thư mục chứa thư viện frontend (nếu có dùng npm)
+node_modules/

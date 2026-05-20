@@ -1,0 +1,300 @@
+@model Lite.Shop.Models.OrderViewDetail
+
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+
+    string statusText = Model.Status switch
+    {
+         1 => "Chờ duyệt",
+         2 => "Đã duyệt",
+         3 => "Đang giao",
+         4 => "Hoàn tất",
+        -1 => "Đã huỷ",
+        -2 => "Bị từ chối",
+         _  => "Không xác định"
+    };
+    string statusClass = Model.Status switch
+    {
+         1 => "warning",
+         2 => "info",
+         3 => "primary",
+         4 => "success",
+        -1 => "danger",
+        -2 => "danger",
+         _  => "secondary"
+    };
+
+    decimal total = Model.Items.Sum(i => i.SalePrice * i.Quantity);
+
+    bool canReturn = Model.Status == 4
+        && Model.FinishedTime.HasValue
+        && (DateTime.UtcNow - Model.FinishedTime.Value).TotalDays <= 7
+        && Model.ReturnRequest == null;
+
+    var rr = Model.ReturnRequest;
+}
+
+<h3 class="text-primary mb-4">📄 Chi tiết đơn hàng #@Model.OrderID</h3>
+
+<div class="alert alert-@statusClass d-flex align-items-center mb-4">
+    <strong class="me-2">Trạng thái:</strong> @statusText
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header fw-bold">👤 Thông tin khách hàng</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Họ tên:</strong> @(Model.CustomerName ?? "-")</p>
+                <p class="mb-1"><strong>Số điện thoại:</strong> @(Model.Phone ?? "-")</p>
+                <p class="mb-1"><strong>Địa chỉ giao hàng:</strong> @(Model.DeliveryAddress ?? "-")</p>
+                <p class="mb-0"><strong>Tỉnh / Thành:</strong> @(Model.DeliveryProvince ?? "-")</p>
+            </div>
+        </div>
+    </div>
+    @if (Model.Status == 3 || Model.Status == 4)
+    {
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header fw-bold">🚚 Thông tin vận chuyển</div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Đơn vị / Shipper:</strong> @(Model.ShipperName ?? "-")</p>
+                    <p class="mb-0"><strong>Điện thoại:</strong> @(Model.ShipperPhone ?? "-")</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card mb-4">
+    <div class="card-header fw-bold">🕐 Lịch sử trạng thái</div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+                <span>📝 Đặt hàng</span>
+                <span class="text-muted">@(Model.OrderTime?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</span>
+            </li>
+            @if (Model.AcceptTime.HasValue)
+            {
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>✅ Đã duyệt</span>
+                    <span class="text-muted">@Model.AcceptTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+            }
+            @if (Model.ShippedTime.HasValue)
+            {
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>🚚 Bàn giao vận chuyển</span>
+                    <span class="text-muted">@Model.ShippedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+            }
+            @if (Model.FinishedTime.HasValue && Model.Status == 4)
+            {
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>🎉 Hoàn tất</span>
+                    <span class="text-muted">@Model.FinishedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+            }
+            @if (Model.Status == -1)
+            {
+                <li class="list-group-item d-flex justify-content-between text-danger">
+                    <span>❌ Đã huỷ</span>
+                    <span class="text-muted">@(Model.CancelledTime?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</span>
+                </li>
+            }
+            @if (Model.Status == -2)
+            {
+                <li class="list-group-item d-flex justify-content-between text-danger">
+                    <span>🚫 Bị từ chối</span>
+                    <span class="text-muted">@(Model.FinishedTime?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</span>
+                </li>
+            }
+
+            @if (rr != null)
+            {
+                <li class="list-group-item d-flex justify-content-between @(rr.Type == "Refund" ? "text-warning" : "text-info")">
+                    <span>@(rr.Type == "Refund" ? "🔄 Yêu cầu hoàn hàng" : "🔁 Yêu cầu đổi hàng")</span>
+                    <span class="text-muted">@rr.RequestTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+                @if (rr.Status == -1)
+                {
+                    <li class="list-group-item d-flex justify-content-between text-danger">
+                        <span>🚫 Yêu cầu bị từ chối@(!string.IsNullOrWhiteSpace(rr.RejectReason) ? $" — {rr.RejectReason}" : "")</span>
+                        <span class="text-muted">@(rr.ApprovedTime?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</span>
+                    </li>
+                }
+                @if (rr.ApprovedTime.HasValue && rr.Status != -1)
+                {
+                    <li class="list-group-item d-flex justify-content-between text-success">
+                        <span>✅ Yêu cầu được duyệt</span>
+                        <span class="text-muted">@rr.ApprovedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                }
+                @if (rr.ShippedTime.HasValue)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@(rr.Type == "Refund" ? "🚚 Shipper đến lấy hàng / trả tiền" : "🚚 Giao hàng mới")</span>
+                        <span class="text-muted">@rr.ShippedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                }
+                @if (rr.CompletedTime.HasValue)
+                {
+                    <li class="list-group-item d-flex justify-content-between fw-bold text-success">
+                        <span>@(rr.Type == "Refund" ? "💰 Hoàn hàng thành công" : "🎉 Đổi hàng thành công")</span>
+                        <span class="text-muted">@rr.CompletedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                }
+                @if ((rr.Status == 2 || rr.Status == 3 || rr.Status == 4) && !string.IsNullOrWhiteSpace(rr.ShipperName))
+                {
+                    <li class="list-group-item bg-light">
+                        <small class="text-muted">
+                            Shipper phụ trách: <strong>@rr.ShipperName</strong>
+                            @if (!string.IsNullOrWhiteSpace(rr.ShipperPhone)) { <span> — @rr.ShipperPhone</span> }
+                        </small>
+                    </li>
+                }
+                @if (rr.Photos.Count > 0)
+                {
+                    <li class="list-group-item">
+                        <small class="text-muted d-block mb-2">📷 Ảnh đính kèm:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var photo in rr.Photos)
+                            {
+                                <img src="/images/returns/@photo"
+                                     onclick="showReturnPhoto('/images/returns/@photo')"
+                                     style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd;cursor:pointer;"
+                                     title="Nhấn để xem ảnh lớn" />
+                            }
+                        </div>
+                    </li>
+                }
+
+<!-- Modal xem ảnh -->
+<div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <img id="photoModalImg" src="" style="max-width:90vw;max-height:80vh;border-radius:8px;" />
+    <button onclick="document.getElementById('photoModal').style.display='none'"
+            class="btn btn-secondary">
+        ← Quay lại
+    </button>
+</div>
+            }
+        </ul>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header fw-bold">🛍 Sản phẩm đặt mua</div>
+    <div class="card-body p-0">
+        <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th style="width:80px">Ảnh</th>
+                    <th>Sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="text-center">
+                            @if (!string.IsNullOrWhiteSpace(item.Photo))
+                            {
+                                <img src="/images/products/@item.Photo" alt="@item.ProductName"
+                                     style="width:60px;height:60px;object-fit:cover;border-radius:6px;" />
+                            }
+                            else
+                            {
+                                <img src="/images/no-image.png" alt="Không có ảnh"
+                                     style="width:60px;height:60px;object-fit:cover;border-radius:6px;" />
+                            }
+                        </td>
+                        <td><a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductID" class="text-decoration-none text-dark fw-bold">@item.ProductName</a></td>
+                        <td class="text-end">@item.SalePrice.ToString("N0") đ</td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-end text-danger fw-bold">@((item.SalePrice * item.Quantity).ToString("N0")) đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="text-end mb-4">
+    <h4 class="text-danger">Tổng tiền: @total.ToString("N0") đ</h4>
+</div>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-secondary">← Quay lại</a>
+    <div class="d-flex gap-2">
+        @if (Model.Status == 1 || Model.Status == 2)
+        {
+            <form asp-action="Cancel" method="post"
+                  onsubmit="return confirm('Bạn có chắc muốn huỷ đơn này?');">
+                <input type="hidden" name="id" value="@Model.OrderID" />
+                <button type="submit" class="btn btn-danger">❌ Huỷ đơn</button>
+            </form>
+        }
+        @if (canReturn)
+        {
+            <button class="btn btn-warning" onclick="openReturnModal('Refund')">🔄 Hoàn hàng</button>
+            <button class="btn btn-info text-white" onclick="openReturnModal('Exchange')">🔁 Đổi hàng</button>
+        }
+    </div>
+</div>
+
+@if (canReturn)
+{
+    <div id="returnModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:480px;margin:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+            <h5 id="modalTitle" class="mb-3 fw-bold"></h5>
+            <form action="/Return/Submit" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="orderId" value="@Model.OrderID" />
+                <input type="hidden" name="type" id="returnType" value="" />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Lý do <span class="text-danger">*</span></label>
+                    <textarea name="reason" class="form-control" rows="3"
+                              placeholder="Mô tả lý do hoàn/đổi hàng..." required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Ảnh chụp sản phẩm <span class="text-muted">(tối đa 5 ảnh)</span></label>
+                    <input type="file" name="photos" class="form-control" accept="image/*" multiple />
+                    <small class="text-muted">Chụp rõ tình trạng sản phẩm, tem mác, lỗi (nếu có)</small>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">Huỷ</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn"></button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    function showReturnPhoto(src) {
+        document.getElementById("photoModalImg").src = src;
+        document.getElementById("photoModal").style.display = "flex";
+    }
+    document.getElementById("photoModal")?.addEventListener("click", function(e) {
+        if (e.target === this) this.style.display = "none";
+    });
+
+    function openReturnModal(type) {
+        document.getElementById("returnType").value = type;
+        document.getElementById("modalTitle").textContent =
+            type === "Refund" ? "🔄 Yêu cầu hoàn hàng" : "🔁 Yêu cầu đổi hàng";
+        document.getElementById("modalSubmitBtn").textContent =
+            type === "Refund" ? "Gửi yêu cầu hoàn hàng" : "Gửi yêu cầu đổi hàng";
+        document.getElementById("returnModal").style.display = "flex";
+    }
+    function closeReturnModal() {
+        document.getElementById("returnModal").style.display = "none";
+    }
+    document.getElementById("returnModal")?.addEventListener("click", function(e) {
+        if (e.target === this) closeReturnModal();
+    });
+</script>
+}

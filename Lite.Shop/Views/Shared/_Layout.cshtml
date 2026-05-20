@@ -1,0 +1,181 @@
+@using Microsoft.AspNetCore.Http
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - NPT Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/css/site.css" rel="stylesheet" />
+</head>
+<body>
+@{
+    var customerName = Context.Session.GetString("CustomerName");
+    var isLoggedIn = !string.IsNullOrEmpty(customerName);
+
+    if (!(User?.Identity != null && User.Identity.IsAuthenticated))
+    {
+        customerName = null;
+        isLoggedIn = false;
+        Context.Session.Remove("CustomerID");
+        Context.Session.Remove("CustomerName");
+    }
+
+    var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
+    var isHome = currentPath == "/" || currentPath == "/product" || currentPath == "/product/index" || currentPath == "";
+}
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg shadow-sm" style="background:#fff;border-bottom:1px solid #e0e0e0;">
+    <div class="container">
+        <a class="navbar-brand fw-bold" asp-controller="Product" asp-action="Index"
+           style="color:#1565c0;font-size:1.3rem;">
+            🛒 NPT Shop
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-controller="Product" asp-action="Index">
+                        <i class="bi bi-box-seam me-1"></i> Sản phẩm
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
+                        <i class="bi bi-cart3 me-1"></i> Giỏ hàng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-controller="Order" asp-action="Index">
+                        <i class="bi bi-receipt me-1"></i> Đơn hàng
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav">
+                @if (isLoggedIn)
+                {
+                    <li class="nav-item">
+                        <span class="nav-link text-dark">
+                            <i class="bi bi-person-circle me-1"></i> @customerName
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Account" asp-action="Profile">
+                            <i class="bi bi-person-lines-fill me-1"></i> Cá nhân
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Account" asp-action="ChangePassword">
+                            <i class="bi bi-key me-1"></i> Đổi mật khẩu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Account" asp-action="Logout">
+                            <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">
+                            <i class="bi bi-person-plus me-1"></i> Đăng ký
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@if (isHome)
+{
+    <div id="shopBanner" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#shopBanner" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#shopBanner" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#shopBanner" data-bs-slide-to="2"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;text-align:center;padding:20px;">
+                    <h1 style="font-size:2.4rem;font-weight:700;margin-bottom:10px;">🛒 Siêu Sale Cuối Năm</h1>
+                    <p style="font-size:1.1rem;opacity:.85;">Giảm giá lên đến 50% cho tất cả mặt hàng.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div style="background:linear-gradient(135deg,#0f3460,#533483);height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;text-align:center;padding:20px;">
+                    <h1 style="font-size:2.4rem;font-weight:700;margin-bottom:10px;">🚚 Miễn Phí Vận Chuyển</h1>
+                    <p style="font-size:1.1rem;opacity:.85;">Cho đơn hàng từ 500.000đ trở lên.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div style="background:linear-gradient(135deg,#e94560,#0f3460);height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;text-align:center;padding:20px;">
+                    <h1 style="font-size:2.4rem;font-weight:700;margin-bottom:10px;">🎁 Quà Tặng Hấp Dẫn</h1>
+                    <p style="font-size:1.1rem;opacity:.85;">Mua sắm ngay hôm nay nhận ngay ưu đãi.</p>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#shopBanner" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#shopBanner" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+}
+
+<div class="page-content">
+    <div class="container mt-4 mb-5">
+        @RenderBody()
+    </div>
+</div>
+
+<footer style="background:#1565c0;color:#e3f2fd;padding:32px 0 16px;">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5 class="fw-bold text-white mb-3">🛒 NPT Shop</h5>
+                <p class="small" style="color:#bbdefb;">Chuyên cung cấp các sản phẩm chất lượng cao với giá cả phải chăng.</p>
+            </div>
+            <div class="col-md-4">
+                <h6 class="fw-bold text-white mb-3">Liên kết nhanh</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-1"><a href="/Product" style="color:#bbdefb;text-decoration:none;">🛍 Sản phẩm</a></li>
+                    <li class="mb-1"><a href="/Cart" style="color:#bbdefb;text-decoration:none;">🛒 Giỏ hàng</a></li>
+                    <li class="mb-1"><a href="/Order" style="color:#bbdefb;text-decoration:none;">📦 Đơn hàng</a></li>
+                    <li class="mb-1"><a href="/Account/Profile" style="color:#bbdefb;text-decoration:none;">👤 Tài khoản</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6 class="fw-bold text-white mb-3">Liên hệ</h6>
+                <ul class="list-unstyled small" style="color:#bbdefb;">
+                    <li class="mb-1">📧 nptshop@gmail.com</li>
+                    <li class="mb-1">📞 0123 456 789</li>
+                    <li class="mb-1">📍 Huế, Việt Nam</li>
+                </ul>
+            </div>
+        </div>
+        <hr style="border-color:rgba(255,255,255,0.2);margin:16px 0 12px;" />
+        <div class="text-center small" style="color:#90caf9;">
+            © @DateTime.Now.Year NPT Shop. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@RenderSection("Scripts", required: false)
+
+</body>
+</html>

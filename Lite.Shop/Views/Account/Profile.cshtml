@@ -1,0 +1,60 @@
+@model Lite.Shop.Models.Customer
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewBag.Title = "Thông tin cá nhân";
+}
+
+<h2>Thông tin cá nhân</h2>
+
+@if (ViewBag.Message != null)
+{
+    <div class="alert alert-success">@ViewBag.Message</div>
+}
+
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Tên khách hàng</label>
+        <input type="text" name="CustomerName" value="@Model.CustomerName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Người liên hệ</label>
+        <input type="text" name="ContactName" value="@Model.ContactName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Địa chỉ</label>
+        <input type="text" name="Address" value="@Model.Address" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tỉnh / Thành</label>
+        <select name="Province" class="form-select">
+            @foreach (var item in (List<SelectListItem>)ViewBag.ProvinceList)
+            {
+                if (item.Value == Model.Province)
+                {
+                    <option value="@item.Value" selected>@item.Text</option>
+                }
+                else
+                {
+                    <option value="@item.Value">@item.Text</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Số điện thoại</label>
+        <input type="text" name="Phone" value="@Model.Phone" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <div class="form-control bg-light text-muted">@Model.Email</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a href="/" class="btn btn-secondary ms-2">Về trang chủ</a>
+</form>

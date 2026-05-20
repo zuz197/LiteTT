@@ -1,0 +1,211 @@
+@model Product
+@{
+}
+@section PageToolBar {
+    <button type="submit" form="formEdit" class="btn btn-primary">
+        <i class="bi bi-save"></i>
+        Lưu dữ liệu
+    </button>
+
+    <a href="~/Product" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        @Html.ValidationMessage("Error", new { @class = "text-danger" })
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-info">@TempData["Message"]</div>
+        }
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Thông tin mặt hàng
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form id="formEdit" method="post" action="~/Product/SaveData" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="ProductID" />
+                    <input type="hidden" asp-for="Photo" />
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Tên mặt hàng</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="ProductName"
+                                   class="form-control"
+                                   placeholder="Nhập tên mặt hàng" autofocus />
+                            <span asp-validation-for="ProductName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Loại hàng</label>
+                        <div class="col-sm-3">
+                            <select class="form-select" asp-for="CategoryID" asp-items="await SelectListHelper.Categories()">
+                            </select>
+                            <span asp-validation-for="CategoryID" class="text-danger"></span>
+                        </div>
+
+                        <label class="col-sm-2 col-form-label text-end">Nhà cung cấp</label>
+                        <div class="col-sm-4">
+                            <select class="form-select" asp-for="SupplierID" asp-items="await SelectListHelper.Suppliers()">
+                            </select>
+                            <span asp-validation-for="SupplierID" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Đơn vị tính</label>
+                        <div class="col-sm-3">
+                            <input type="text" asp-for="Unit"
+                                   class="form-control"
+                                   placeholder="cái, hộp, kg..." />
+                            <span asp-validation-for="Unit" class="text-danger"></span>
+                        </div>
+
+                        <label class="col-sm-2 col-form-label text-end">Giá</label>
+                        <div class="col-sm-4">
+                            @* Không dùng AutoNumeric: tự format khi blur để không nhảy con trỏ / không reset về 0 *@
+                            <input type="text" asp-for="Price"
+                                   class="form-control js-price-vnd"
+                                   placeholder="Nhập giá (rời ô sẽ thêm dấu . nghìn)"
+                                   autocomplete="off"
+                                   inputmode="numeric" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Trạng thái</label>
+                        <div class="col-sm-9">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" asp-for="IsSelling"
+                                       type="checkbox"
+                                       id="IsSelling"
+                                       />
+                                <label class="form-check-label" for="IsSelling">
+                                    Đang bán
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Ảnh</label>
+                        <div class="col-sm-9">
+                            <input type="file"
+                                   name="uploadPhoto"
+                                   class="form-control"
+                                   accept="image/*"
+                                   data-img-preview="imgPreview"
+                                   onchange="previewImage(this)" />
+                            <div class="mt-2">
+                                <img id="imgPreview"
+                                     src="~/images/products/@(string.IsNullOrWhiteSpace(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                                     class="img-thumbnail"
+                                     style="max-height: 160px;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label">Mô tả</label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" asp-for="ProductDescription"
+                                      rows="3"
+                                      placeholder="Nhập mô tả mặt hàng"></textarea>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    //if (Model.ProductId > 0) {
+    await Html.RenderPartialAsync("ListPhotos", ViewBag.ProductPhotos as List<ProductPhoto> ?? new List<ProductPhoto>());
+    await Html.RenderPartialAsync("ListAttributes", ViewBag.ProductAttributes as List<ProductAttribute> ?? new List<ProductAttribute>());
+    // }
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            function onlyDigits(str) {
+                return (str || '').replace(/\D/g, '');
+            }
+            function formatThousands(digits) {
+                if (!digits) return '';
+                return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            /** Phần nguyên / phần thập phân (tối đa phần thập phân server bind). */
+            function splitMoney(s) {
+                s = (s || '').trim().replace(/\s/g, '');
+                if (!s) return { a: '', b: '' };
+                if (s.indexOf(',') >= 0) {
+                    var c = s.lastIndexOf(',');
+                    return {
+                        a: onlyDigits(s.slice(0, c).replace(/\./g, '')),
+                        b: onlyDigits(s.slice(c + 1))
+                    };
+                }
+                var d = s.lastIndexOf('.');
+                if (d >= 0) {
+                    var after = s.slice(d + 1);
+                    if (/^\d{1,2}$/.test(after) && s.indexOf('.') === d)
+                        return {
+                            a: onlyDigits(s.slice(0, d).replace(/\./g, '')),
+                            b: after
+                        };
+                }
+                return { a: onlyDigits(s.replace(/\./g, '')), b: '' };
+            }
+            function formatDisplay(p) {
+                if (!p.a && !p.b) return '';
+                return formatThousands(p.a) + (p.b ? ',' + p.b : '');
+            }
+            function splitEditable(s) {
+                s = (s || '').trim();
+                if (!s) return { a: '', b: '' };
+                var c = s.lastIndexOf(',');
+                if (c >= 0)
+                    return { a: onlyDigits(s.slice(0, c)), b: onlyDigits(s.slice(c + 1)) };
+                return { a: onlyDigits(s), b: '' };
+            }
+            /** Dùng phẩy thập phân – khớp TryParseMoneyInput (chuỗi chỉ có '.' sẽ bị coi là nghìn và bị xóa hết). */
+            function toSubmit(p) {
+                if (!p.a && !p.b) return '';
+                return p.b ? p.a + ',' + p.b : p.a;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var el = document.getElementById('Price');
+                var form = document.getElementById('formEdit');
+                if (!el || !form) return;
+
+                if (el.value)
+                    el.value = formatDisplay(splitMoney(el.value));
+
+                el.addEventListener('focus', function () {
+                    var p = splitMoney(this.value);
+                    this.value = p.b ? p.a + ',' + p.b : p.a;
+                });
+                el.addEventListener('blur', function () {
+                    if (this.value)
+                        this.value = formatDisplay(splitEditable(this.value));
+                });
+
+                form.addEventListener('submit', function () {
+                    el.value = toSubmit(splitEditable(el.value));
+                }, true);
+            });
+        })();
+    </script>
+}

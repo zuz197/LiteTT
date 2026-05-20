@@ -1,0 +1,136 @@
+@model Lite.Models.Sales.ReturnRequest
+@{
+    Layout = null;
+    string typeText = Model.Type == "Refund" ? "Hoàn hàng" : "Đổi hàng";
+    string statusText = Model.Status switch
+    {
+         1 => "Chờ duyệt",
+         2 => "Đã duyệt",
+         3 => "Đang xử lý",
+         4 => "Hoàn tất",
+        -1 => "Bị từ chối",
+         _  => "-"
+    };
+}
+
+<div class="modal-header">
+    <h5 class="modal-title">
+        @(Model.Type == "Refund" ? "🔄" : "🔁") Yêu cầu @typeText — Đơn #@Model.OrderID
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Thông tin yêu cầu -->
+    <dl class="row mb-3">
+        <dt class="col-sm-4">Loại yêu cầu</dt>
+        <dd class="col-sm-8">@typeText</dd>
+
+        <dt class="col-sm-4">Trạng thái</dt>
+        <dd class="col-sm-8"><span class="badge bg-warning text-dark">@statusText</span></dd>
+
+        <dt class="col-sm-4">Khách hàng</dt>
+        <dd class="col-sm-8">@(Model.CustomerName ?? "-") — @(Model.CustomerPhone ?? "-")</dd>
+
+        <dt class="col-sm-4">Thời gian gửi</dt>
+        <dd class="col-sm-8">@Model.RequestTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-4">Lý do</dt>
+        <dd class="col-sm-8">@(Model.Reason ?? "-")</dd>
+    </dl>
+
+    <!-- Ảnh đính kèm -->
+    @if (Model.Photos.Count > 0)
+    {
+        <p class="fw-semibold mb-2">📷 Ảnh đính kèm:</p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @foreach (var photo in Model.Photos)
+            {
+                <img src="/images/returns/@photo"
+                     onclick="showReturnPhoto('/images/returns/@photo')"
+                     style="width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd;cursor:pointer;"
+                     title="Nhấn để xem ảnh lớn" />
+            }
+        </div>
+    }
+
+<!-- Modal xem ảnh -->
+<div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <img id="photoModalImg" src="" style="max-width:90vw;max-height:80vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);" />
+    <button onclick="document.getElementById('photoModal').style.display='none'"
+            class="btn btn-secondary">
+        ← Quay lại
+    </button>
+</div>
+
+<script>
+function showReturnPhoto(src) {
+    document.getElementById('photoModalImg').src = src;
+    document.getElementById('photoModal').style.display = 'flex';
+}
+document.getElementById('photoModal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+
+    <hr />
+
+    @if (Model.Status == 1)
+    {
+        <!-- DUYỆT -->
+        <p class="fw-semibold">✅ Duyệt yêu cầu — chọn shipper xử lý:</p>
+        <form asp-action="ReturnApprove" asp-controller="Order" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnRequestId" value="@Model.ReturnRequestID" />
+            <input type="hidden" name="orderId" value="@Model.OrderID" />
+            <div class="mb-3">
+                <select name="shipperId" class="form-select" required>
+                    @foreach (var s in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Shippers)
+                    {
+                        <option value="@s.Value">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success w-100">✅ Duyệt yêu cầu</button>
+        </form>
+
+        <hr />
+
+        <!-- TỪ CHỐI -->
+        <p class="fw-semibold">🚫 Từ chối yêu cầu:</p>
+        <form asp-action="ReturnReject" asp-controller="Order" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnRequestId" value="@Model.ReturnRequestID" />
+            <input type="hidden" name="orderId" value="@Model.OrderID" />
+            <div class="mb-3">
+                <textarea name="rejectReason" class="form-control" rows="2"
+                          placeholder="Lý do từ chối..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger w-100">🚫 Từ chối</button>
+        </form>
+    }
+
+    @if (Model.Status == 2)
+    {
+        <form asp-action="ReturnSetShipped" asp-controller="Order" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnRequestId" value="@Model.ReturnRequestID" />
+            <input type="hidden" name="orderId" value="@Model.OrderID" />
+            <button type="submit" class="btn btn-primary w-100">
+                🚚 @(Model.Type == "Refund" ? "Xác nhận shipper đã đến lấy hàng / trả tiền" : "Xác nhận đã giao hàng mới")
+            </button>
+        </form>
+    }
+
+    @if (Model.Status == 3)
+    {
+        <form asp-action="ReturnComplete" asp-controller="Order" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnRequestId" value="@Model.ReturnRequestID" />
+            <input type="hidden" name="orderId" value="@Model.OrderID" />
+            <button type="submit" class="btn btn-success w-100">
+                🎉 @(Model.Type == "Refund" ? "Hoàn hàng thành công" : "Đổi hàng thành công")
+            </button>
+        </form>
+    }
+</div>

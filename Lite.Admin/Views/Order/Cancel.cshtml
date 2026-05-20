@@ -1,0 +1,23 @@
+@model int
+@{
+    Layout = null;
+}
+<form asp-controller="Order" asp-action="CancelConfirm" asp-route-id="@Model" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal-header text-bg-warning">
+        <strong class="modal-title">Xác nhận hủy đơn hàng</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-warning mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            Xác nhận hủy đơn? Với đơn <strong>đang giao</strong>, dùng khi khách từ chối nhận hoặc không thể hoàn tất giao hàng — đơn chuyển sang <strong>Bị hủy</strong>.
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-warning">
+            <i class="bi bi-check"></i> Hủy đơn
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    </div>
+</form>

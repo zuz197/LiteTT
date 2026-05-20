@@ -1,0 +1,95 @@
+@model Lite.Shop.Models.ProductDetailsViewModel
+
+@{
+    ViewBag.Title = Model?.ProductName ?? "Chi tiết sản phẩm";
+}
+
+<div class="row g-4">
+    <!-- LEFT: image only -->
+    <div class="col-md-6">
+        @{
+            var photoSrc = !string.IsNullOrWhiteSpace(Model?.Photo)
+                ? $"/images/products/{Model.Photo}"
+                : "/images/products/nophoto.png";
+            var fallbackSrc = "/images/products/nophoto.png";
+        }
+
+        <div class="card shadow-sm p-2">
+            <img src="@photoSrc"
+                 alt=""
+                 class="img-fluid rounded"
+                 style="object-fit:contain; width:100%; height:450px; background:#f8f8f8;"
+                 onerror="this.onerror=null; this.src='@fallbackSrc';" />
+        </div>
+    </div>
+
+    <!-- RIGHT: information -->
+    <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <h2 class="mb-1" style="font-size:1.8rem; line-height:1.2;">
+                    @Model?.ProductName
+                </h2>
+                <div class="text-muted small">
+                    Mã sản phẩm: <span class="fw-semibold">@Model?.ProductID</span>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <div class="h4 text-primary fw-bold" style="font-size:1.6rem;">
+                    @Model?.Price.ToString("N0") đ
+                </div>
+
+                <div class="mt-2">
+                    @if (Model?.IsSelling == true)
+                    {
+                        <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                            <input type="hidden" name="productId" value="@Model?.ProductID" />
+                            <button type="submit" class="btn btn-success btn-lg" style="min-width:140px;">
+                                Thêm vào giỏ
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-lg" style="min-width:140px;" disabled>
+                            Ngừng bán
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- MÔ TẢ SẢN PHẨM  -->
+        <div class="mb-3">
+            <div class="fw-bold mb-1">Mô tả sản phẩm</div>
+            <div class="text-muted" style="white-space: pre-line;">
+                @(string.IsNullOrWhiteSpace(Model?.ProductDescription)
+                    ? "Chưa có mô tả."
+                    : Model.ProductDescription)
+            </div>
+        </div>
+
+        <dl class="row mt-3">
+            <dt class="col-sm-4">Nhà cung cấp</dt>
+            <dd class="col-sm-8">@(!string.IsNullOrEmpty(Model?.SupplierName) ? Model.SupplierName : "—")</dd>
+
+            <dt class="col-sm-4">Loại</dt>
+            <dd class="col-sm-8">@(!string.IsNullOrEmpty(Model?.CategoryName) ? Model.CategoryName : "—")</dd>
+
+            <dt class="col-sm-4">Đơn vị</dt>
+            <dd class="col-sm-8">@Model?.Unit</dd>
+
+            <dt class="col-sm-4">Trạng thái</dt>
+            <dd class="col-sm-8">@((Model?.IsSelling == true) ? "Đang bán" : "Ngưng bán")</dd>
+        </dl>
+
+        <div class="mt-4">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-outline-secondary">
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,66 @@
+@model Product
+@{
+    ViewBag.Title = "Chi tiết mặt hàng";
+}
+
+@section PageToolBar {
+    <a href="~/Product/Edit/@Model.ProductID" class="btn btn-primary">
+        <i class="bi bi-pencil me-1"></i>
+        Chỉnh sửa
+    </a>
+    <a href="~/Product" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Thông tin mặt hàng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Tên mặt hàng</dt>
+                            <dd class="col-sm-9">@Model.ProductName</dd>
+                            <dt class="col-sm-3">Mã loại hàng</dt>
+                            <dd class="col-sm-9">@Model.CategoryID</dd>
+                            <dt class="col-sm-3">Mã nhà cung cấp</dt>
+                            <dd class="col-sm-9">@Model.SupplierID</dd>
+                            <dt class="col-sm-3">Đơn vị tính</dt>
+                            <dd class="col-sm-9">@Model.Unit</dd>
+                            <dt class="col-sm-3">Giá bán</dt>
+                            <dd class="col-sm-9">@Model.Price.ToString("N0") đ</dd>
+                            <dt class="col-sm-3">Trạng thái</dt>
+                            <dd class="col-sm-9">
+                                @if (Model.IsSelling)
+                                {
+                                    <span class="badge bg-success">Đang bán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Ngừng bán</span>
+                                }
+                            </dd>
+                            <dt class="col-sm-3">Mô tả</dt>
+                            <dd class="col-sm-9">@Model.ProductDescription</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <img src="~/images/products/@(string.IsNullOrWhiteSpace(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                             class="img-thumbnail"
+                             style="max-height: 240px;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    await Html.RenderPartialAsync("ListAttributes", ViewBag.Attributes as List<ProductAttribute> ?? new List<ProductAttribute>());
+    await Html.RenderPartialAsync("ListPhotos", ViewBag.Photos as List<ProductPhoto> ?? new List<ProductPhoto>());
+}

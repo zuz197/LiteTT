@@ -1,0 +1,73 @@
+:root{
+  --brand-blue:#0b57a4; /* hÆ¡i Ä‘áº­m */
+  --brand-blue-2:#1565c0;
+  --bg:#f5f0e8;
+}
+
+body{
+    background: var(--bg);
+    color:#222;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Navbar */
+.navbar.bg-primary{
+    background: var(--brand-blue) !important;
+}
+
+/* Buttons */
+.btn-primary{
+    background: var(--brand-blue) !important;
+    border-color: var(--brand-blue) !important;
+}
+
+.btn-primary:hover{
+    background: var(--brand-blue-2) !important;
+    border-color: var(--brand-blue-2) !important;
+}
+
+/* Cards */
+.card{
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card .card-img-top{
+    transition: transform .25s ease;
+}
+.card:hover .card-img-top{
+    transform: scale(1.05);
+}
+
+/* Table header */
+th{
+    background: var(--brand-blue);
+    color: #fff;
+}
+
+/* Footer */
+footer.bg-primary{
+    background: var(--brand-blue) !important;
+}
+
+/* Responsive small fixes */
+@media (max-width:576px){
+    .card .card-img-top{ height:150px; object-fit:cover; }
+}
+
+/* Footer luĂ´n náº±m dÆ°á»›i viewport Ä‘áº§u tiĂªn */
+html, body {
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.page-content {
+    flex: 1 0 auto;
+    min-height: calc(100vh - 56px); /* 56px = chiá»u cao navbar */
+}
+footer {
+    flex-shrink: 0;
+}

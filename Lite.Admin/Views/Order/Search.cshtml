@@ -1,0 +1,132 @@
+@{
+    Layout = null;
+}
+<div class="mb-2 text-muted">
+    Danh sách này có <strong>@Model.RowCount.ToString("N0")</strong> đơn hàng
+</div>
+
+<div class="card">
+    <div class="card-body p-1">
+        <table class="table table-bordered table-hover mb-0 align-middle">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Ngày đặt hàng</th>
+                    <th>Tên khách hàng</th>
+                    <th>Điện thoại</th>
+                    <th>Ngày duyệt</th>
+                    <th>Nhân viên xử lý</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th class="text-center" style="width:140px;">Trạng thái</th>
+                    <th class="text-center" style="width:40px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.DataItems)
+                {
+                    <tr>
+                        <td>@item.OrderTime.ToString("dd/MM/yyyy")</td>
+                        <td>@item.CustomerName</td>
+                        <td>@item.CustomerPhone</td>
+                        <td>@(item.AcceptTime?.ToString("dd/MM/yyyy"))</td>
+                        <td>@item.EmployeeName</td>
+                        <td class="text-end">@item.SumOfPrice.ToString("N0")</td>
+                        <td class="text-center">
+                            @if (item.Status == Lite.Models.Sales.OrderStatusEnum.New)
+                            {
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                            }
+                            else if (item.Status == Lite.Models.Sales.OrderStatusEnum.Accepted)
+                            {
+                                <span class="badge bg-primary">Đã duyệt</span>
+                            }
+                            else if (item.Status == Lite.Models.Sales.OrderStatusEnum.Shipping)
+                            {
+                                <span class="badge bg-info text-dark">Đang giao</span>
+                            }
+                            else if (item.Status == Lite.Models.Sales.OrderStatusEnum.Completed)
+                            {
+                                <span class="badge bg-success">Hoàn tất</span>
+                            }
+                            else if (item.Status == Lite.Models.Sales.OrderStatusEnum.Cancelled)
+                            {
+                                <span class="badge bg-secondary">Bị hủy</span>
+                            }
+                            else if (item.Status == Lite.Models.Sales.OrderStatusEnum.Rejected)
+                            {
+                                <span class="badge bg-danger">Bị từ chối</span>
+                            }
+                            @if ((int?)item.ReturnRequestStatus != null)
+                            {
+                                <br />
+                                @if (item.ReturnRequestStatus == 1)
+                                {
+                                    <span class="badge bg-warning text-dark mt-1">
+                                        @(item.ReturnRequestType == "Refund" ? "🔄 Chờ duyệt hoàn" : "🔁 Chờ duyệt đổi")
+                                    </span>
+                                }
+                                else if (item.ReturnRequestStatus == 2)
+                                {
+                                    <span class="badge bg-primary mt-1">
+                                        @(item.ReturnRequestType == "Refund" ? "🔄 Đã duyệt hoàn" : "🔁 Đã duyệt đổi")
+                                    </span>
+                                }
+                                else if (item.ReturnRequestStatus == 3)
+                                {
+                                    <span class="badge bg-info text-dark mt-1">
+                                        @(item.ReturnRequestType == "Refund" ? "🔄 Đang xử lý hoàn" : "🔁 Đang xử lý đổi")
+                                    </span>
+                                }
+                                else if (item.ReturnRequestStatus == 4)
+                                {
+                                    <span class="badge bg-success mt-1">
+                                        @(item.ReturnRequestType == "Refund" ? "🔄 Hoàn hàng xong" : "🔁 Đổi hàng xong")
+                                    </span>
+                                }
+                                else if (item.ReturnRequestStatus == -1)
+                                {
+                                    <span class="badge bg-secondary mt-1">
+                                        @(item.ReturnRequestType == "Refund" ? "🔄 Hoàn bị từ chối" : "🔁 Đổi bị từ chối")
+                                    </span>
+                                }
+                            }
+                        </td>
+                        <td class="text-center text-nowrap">
+                            <a href="~/Order/Detail/@item.OrderID" class="btn btn-sm btn-primary">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer">
+        <ul class="pagination justify-content-center mb-0">
+            @foreach (var p in Model.GetDisplayPages())
+            {
+                if (p.IsCurrent)
+                {
+                    <li class="page-item active">
+                        <a class="page-link">@p.Page</a>
+                    </li>
+                }
+                else if (p.IsEllipsis)
+                {
+                    <li class="page-item">
+                        <a class="page-link">...</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="javascript:;"
+                           onclick="paginationSearch(event, document.getElementById('formSearch'), @p.Page)">
+                            @p.Page
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,96 @@
+@model ProductPhoto
+@{
+}
+@section PageToolBar {
+    <button type="submit" form="formEdit" class="btn btn-primary">
+        <i class="bi bi-save"></i>
+        Lưu ảnh
+    </button>
+
+    <a href="~/Product/Edit/@Model.ProductID#photos" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+<div class="row justify-content-center">
+    <div class="col-12">
+        @Html.ValidationMessage("Error", new { @class = "text-danger" })
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h5 class="mb-0">Thông tin ảnh mặt hàng</h5>
+            </div>
+
+            <div class="card-body">
+                <form id="formEdit" method="post" action="~/Product/SavePhoto" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="PhotoID" />
+                    <input type="hidden" asp-for="ProductID" />
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 fw-semibold">Tên file ảnh</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="Photo"
+                                   class="form-control"
+                                   placeholder="Ví dụ: sample.jpg" />
+                            <span asp-validation-for="Photo" class="text-danger"></span>
+                            <div class="form-text">Co the giu ten file cu, hoac chon file anh moi ben duoi.</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        <label class="col-sm-3 fw-semibold">Upload ảnh mới</label>
+                        <div class="col-sm-9">
+                            <input type="file"
+                                   name="uploadPhoto"
+                                   class="form-control"
+                                   accept="image/*"
+                                   data-img-preview="imgPreview"
+                                   onchange="previewImage(this)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">Xem trước</label>
+                        <div class="col-sm-9">
+                            <img id="imgPreview"
+                                 src="~/images/products/@(string.IsNullOrWhiteSpace(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                                 class="img-thumbnail"
+                                 style="max-height:200px;" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">Mô tả</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="Description"
+                                   class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 fw-semibold">Thứ tự hiển thị</label>
+                        <div class="col-sm-3">
+                            <input type="number" asp-for="DisplayOrder"
+                                   class="form-control"
+                                   min="1" />
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-sm-3 fw-semibold">Trạng thái</label>
+                        <div class="col-sm-9">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="IsHidden"
+                                       type="checkbox"
+                                       id="IsHidden" />
+                                <label class="form-check-label" for="IsHidden">
+                                    Ẩn ảnh
+                                </label>
+                            </div>
+                        </div>
+                    </div>                    
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

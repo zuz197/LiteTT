@@ -1,0 +1,97 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    ViewBag.Title = "Đăng nhập";
+    Layout = null;
+
+    var failCount = Context.Session.GetInt32("LoginFail") ?? 0;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>LiteCommerce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/adminlte/css/adminlte.css" />
+</head>
+
+<body class="login-page bg-body-secondary">
+    <div class="login-box">
+        <div class="login-logo">
+            <a>NPT Shop </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg">Đăng nhập</p>
+
+                <form action="~/Account/Login" method="post">
+
+                    <div class="input-group mb-3">
+                        <input type="email" name="username" value="@ViewBag.Username"
+                               class="form-control" placeholder="Email" autofocus />
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <input type="password" name="password"
+                               class="form-control" placeholder="Password" />
+                    </div>
+
+                    @if (failCount >= 3)
+                    {
+                        <div class="input-group mb-3">
+                            <input type="text" name="captcha"
+                                   class="form-control" placeholder="Nhập mã captcha" />
+                        </div>
+
+                        <div class="mb-3">
+                            <span id="captchaText"
+                                  style="font-size: 22px; font-weight: bold; letter-spacing: 3px;">
+                            </span>
+                            <button type="button" onclick="loadCaptcha()" class="btn btn-sm btn-secondary">
+                                🔄
+                            </button>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-12">
+                            @Html.ValidationMessage("Error", new { @class="text-danger"})
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary w-100">
+                                Đăng nhập
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function loadCaptcha() {
+        fetch('/Account/GenerateCaptcha')
+            .then(res => res.json())
+            .then(data => {
+                let el = document.getElementById("captchaText");
+                if (el) el.innerText = data.captcha;
+            });
+    }
+
+    // 🔥 CHỈ load khi cần captcha
+    window.onload = function () {
+        let captchaBox = document.getElementById("captchaText");
+        if (captchaBox) {
+            loadCaptcha();
+        }
+    }
+</script>
+
+</body>
+</html>

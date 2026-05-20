@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chỉnh sửa thuộc tính sản phẩm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-4">
+
+        <!-- TITLE -->
+        <h3 class="mb-4">Chỉnh sửa thuộc tính</h3>
+
+        <!-- FORM -->
+        <div class="card">
+            <div class="card-body">
+
+                <form action="/Attribute/Edit" method="post">
+
+                    <!-- Hidden AttributeID -->
+                    <input type="hidden" name="AttributeID" value="1">
+
+                    <!-- Tên thuộc tính -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Tên thuộc tính <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="AttributeName"
+                               class="form-control"
+                               placeholder="Ví dụ: Màu sắc"
+                               value="Màu sắc"
+                               required>
+                    </div>
+
+                    <!-- Giá trị thuộc tính -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Giá trị thuộc tính <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="AttributeValue"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Ví dụ: Đỏ, Xanh, Vàng"
+                                  required>Đỏ</textarea>
+                    </div>
+
+                    <!-- Thứ tự hiển thị -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Thứ tự hiển thị
+                        </label>
+                        <input type="number"
+                               name="DisplayOrder"
+                               class="form-control"
+                               value="1"
+                               min="1">
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="text-end mt-4">
+                        <a href="~/Product/Detail"
+                           class="btn btn-secondary me-2">
+                            ⬅ Quay lại
+                        </a>
+                        <button type="submit"
+                                class="btn btn-primary">
+                            💾 Lưu thay đổi
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

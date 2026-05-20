@@ -1,0 +1,103 @@
+@using Microsoft.AspNetCore.Http
+@{
+    ViewBag.Title = "Đăng nhập";
+    var failCount = Context.Session.GetInt32("LoginFail_Shop") ?? 0;
+    var emailValue = Context.Request.Method == "POST" ? Context.Request.Form["email"].ToString() : "";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height:80vh;">
+    <div class="card shadow-lg p-4" style="width:400px; border-radius:15px;">
+
+        <h3 class="text-center mb-4 text-primary fw-bold">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+        </h3>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger text-center py-2">
+                @ViewBag.Error
+            </div>
+        }
+
+        <form method="post" asp-controller="Account" asp-action="Login">
+
+            <!-- EMAIL -->
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email"
+                       name="email"
+                       value="@emailValue"
+                       class="form-control"
+                       placeholder="Nhập email..."
+                       required />
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input type="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Nhập mật khẩu..."
+                       required />
+            </div>
+
+            <!-- CAPTCHA -->
+            @if (failCount >= 3)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Mã captcha</label>
+                    <input type="text"
+                           name="captcha"
+                           class="form-control"
+                           placeholder="Nhập mã captcha" />
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                    <span id="captchaText"
+                          class="border rounded px-2 py-1 me-2"
+                          style="font-size:22px; font-weight:bold; letter-spacing:3px;"></span>
+                    <button type="button" onclick="loadCaptcha()" class="btn btn-sm btn-secondary">
+                        🔄
+                    </button>
+                </div>
+            }
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-check-circle me-1"></i> Đăng nhập
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-3">
+            <small>
+                Chưa có tài khoản? <a asp-controller="Account" asp-action="Register">Đăng ký</a>
+            </small>
+        </div>
+        <div class="text-center mt-2">
+            <small>
+                <a asp-controller="Account" asp-action="ForgotPassword" class="text-muted">
+                    Quên mật khẩu?
+                </a>
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadCaptcha() {
+        fetch('/Account/GenerateCaptcha')
+            .then(res => res.json())
+            .then(data => {
+                let el = document.getElementById("captchaText");
+                if (el) el.innerText = data.captcha;
+            });
+    }
+
+    window.onload = function () {
+        if (document.getElementById("captchaText")) {
+            loadCaptcha();
+        }
+    }
+</script>

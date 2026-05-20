@@ -1,0 +1,374 @@
+@model ProductSearchInput
+@{
+    ViewBag.Title = "Lập đơn hàng";
+}
+
+<div class="mb-3">
+    <a href="~/Order" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách đơn
+    </a>
+</div>
+
+<div class="row">
+    <!-- Tìm kiếm & chọn mặt hàng -->
+    <div class="col-4">
+        <div class="card card-outline card-primary h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-search"></i>
+                    Lựa chọn hàng cần bán
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <!-- Search -->
+                <form id="formSearch" method="get" class="mb-3" onsubmit="return searchProducts(1)">
+                    <div class="input-group">
+                        <input type="hidden" asp-for="PageSize" />
+                        <input type="hidden" asp-for="CategoryID" />
+                        <input type="hidden" asp-for="SupplierID" />
+                        <input type="hidden" asp-for="MaxPrice" />
+                        <input type="hidden" asp-for="MinPrice" />
+
+                        <input class="form-control"
+                               name="searchValue"
+                               placeholder="Nhập tên mặt hàng cần tìm" autofocus />
+
+                        <button class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Kết quả -->
+                <div id="searchResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Giỏ hàng + thông tin -->
+    <div class="col-8">
+        <!-- Giỏ hàng -->
+        <div class="row">
+            <div class="col-12" id="cart"></div>
+        </div>
+
+        <!-- Thông tin khách -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person"></i>
+                            Khách hàng &amp; hình thức giao
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+                        <form method="post" onsubmit="return createOrder(event,this)">
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Hình thức</label>
+                                <div class="col-md-10">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="deliveryMode" id="dmPickup" value="pickup" checked onchange="syncDeliveryModeUI()">
+                                        <label class="form-check-label" for="dmPickup">Bán tại chỗ (không giao)</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="deliveryMode" id="dmShip" value="ship" onchange="syncDeliveryModeUI()">
+                                        <label class="form-check-label" for="dmShip">Giao hàng</label>
+                                    </div>
+                                    <div class="form-text">Bán tại chỗ: có thể chọn khách vãng lai hoặc khách trong danh bạ (tùy). Giao hàng: bắt buộc khách, tỉnh/thành và địa chỉ.</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Khách hàng <span class="text-danger ship-only-req d-none" title="Bắt buộc khi giao hàng">*</span></label>
+                                <div class="col-md-10">
+                                    <select class="form-select" name="customerID" id="customerID" asp-items="await SelectListHelper.Customers()">
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="shipOnlyFields">
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Tỉnh/thành <span class="text-danger ship-only-req d-none">*</span></label>
+                                <div class="col-md-10">
+                                    <select class="form-select" name="province" id="province" asp-items="await SelectListHelper.Provinces()">
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label class="col-md-2 col-form-label">Địa chỉ giao <span class="text-danger ship-only-req d-none">*</span></label>
+                                <div class="col-md-10">
+                                    <textarea class="form-control" name="address" id="address" rows="2" placeholder="Số nhà, đường, phường…"></textarea>
+                                </div>
+                            </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    Lập đơn hàng
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    /** Parse đơn giá / tiền kiểu vi-VN (dấu . nghìn, dấu , thập phân) — không dùng Number() trực tiếp. */
+    function parseMoneyViToNumber(raw) {
+        if (raw == null || raw === '') return NaN;
+        var s = String(raw).trim().replace(/\s/g, '');
+        if (!s) return NaN;
+        try {
+            if (window.AutoNumeric && typeof AutoNumeric.getAutoNumericElement === 'function') {
+                var el = document.querySelector('#formEditCartItem input[name="SalePrice"]');
+                if (el) {
+                    var an = AutoNumeric.getAutoNumericElement(el);
+                    if (an) {
+                        var ns = an.getNumericString();
+                        if (ns != null && ns !== '') return parseFloat(ns);
+                    }
+                }
+            }
+        } catch (e) { /* ignore */ }
+        if (s.includes('.') && s.includes(','))
+            s = s.replace(/\./g, '').replace(',', '.');
+        else if (s.includes(',') && !s.includes('.'))
+            s = s.replace(',', '.');
+        else if (s.includes('.')) {
+            var segs = s.split('.');
+            var allNum = segs.length > 0 && segs.every(function (p) { return /^\d+$/.test(p); });
+            if (allNum && segs.length > 1) {
+                var last = segs[segs.length - 1];
+                if (last.length === 3)
+                    s = segs.join('');
+                else if (segs.length === 2)
+                    s = segs[0] + '.' + last;
+                else
+                    s = segs.join('');
+            } else
+                s = s.replace(/\./g, '');
+        }
+        return parseFloat(s);
+    }
+
+    function salePriceToFormString(n) {
+        if (!Number.isFinite(n)) return '';
+        var t = (Math.round(n * 100000000) / 100000000).toString();
+        return t.indexOf('.') >= 0 ? t.replace('.', ',') : t;
+    }
+
+    // ================= INIT =================
+    document.addEventListener("DOMContentLoaded", function () {
+        searchProducts(1);
+        showCart();
+        syncDeliveryModeUI();
+    });
+
+    function syncDeliveryModeUI() {
+        var ship = document.getElementById('dmShip').checked;
+        var prov = document.getElementById('province');
+        var addr = document.getElementById('address');
+        var cust = document.getElementById('customerID');
+        document.querySelectorAll('.ship-only-req').forEach(function (el) {
+            el.classList.toggle('d-none', !ship);
+        });
+        if (prov) {
+            prov.disabled = !ship;
+            if (!ship) prov.selectedIndex = 0;
+        }
+        if (addr) {
+            addr.disabled = !ship;
+            if (!ship) addr.value = '';
+        }
+    }
+
+    // ================= SEARCH =================
+    function searchProducts(page) {
+        const form = document.getElementById("formSearch");
+        const params = new URLSearchParams(new FormData(form));
+        params.append("page", page);
+
+        fetch('/Order/SearchProduct?' + params.toString())
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById("searchResult").innerHTML = html;
+            })
+            .catch(() => alert("Không thể tải sản phẩm!"));
+
+        return false;
+    }
+
+    // ================= GIỎ HÀNG =================
+    function showCart() {
+        fetch('/Order/ShowCart')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('cart').innerHTML = html;
+            })
+            .catch(() => alert('Không thể tải giỏ hàng!'));
+    }
+
+    // ================= THÊM =================
+    function addCartItem(event, form) {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+
+        fetch('/Order/AddCartItem', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async res => {
+            if (!res.ok) throw new Error();
+            return await res.json();
+        })
+        .then(data => {
+            if (data.code === 0) {
+                alert(data.message);
+            } else {
+                showCart();
+            }
+        })
+        .catch(() => alert('Lỗi thêm sản phẩm!'));
+
+        return false;
+    }
+
+    // ================= XÓA =================
+    function deleteCartItem(productID) {
+        const formData = new FormData();
+        formData.append('productId', productID);
+
+        fetch('/Order/DeleteCartItem', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.code === 0) {
+                alert(data.message);
+            } else {
+                showCart();
+            }
+        })
+        .catch(() => alert('Lỗi xóa!'));
+    }
+
+    // ================= CLEAR =================
+    function clearCart() {
+        if (!confirm("Xóa toàn bộ giỏ hàng?")) return;
+
+        fetch('/Order/ClearCart', {
+            method: 'POST'
+        })
+        .then(() => showCart())
+        .catch(() => alert('Lỗi clear cart!'));
+    }
+
+    // ================= UPDATE =================
+    function updateCartItem(event, form) {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const quantity = Number(formData.get('Quantity'));
+        const salePrice = parseMoneyViToNumber(formData.get('SalePrice'));
+
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            alert('Số lượng phải lớn hơn 0');
+            return false;
+        }
+        if (!Number.isFinite(salePrice) || salePrice < 0) {
+            alert('Giá bán không hợp lệ');
+            return false;
+        }
+
+        formData.set('SalePrice', salePriceToFormString(salePrice));
+
+        fetch('/Order/UpdateCartItem', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async res => {
+            if (!res.ok) throw new Error();
+            return await res.json();
+        })
+        .then(data => {
+            if (data.code === 0) {
+                alert(data.message);
+                return;
+            }
+
+            showCart();
+
+            // đóng modal đúng chuẩn
+            const modalElement = document.getElementById('dialogModal');
+            if (modalElement) {
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) modalInstance.hide();
+            }
+        })
+        .catch(() => alert('Lỗi cập nhật!'));
+
+        return false;
+    }
+
+    // ================= TẠO ĐƠN =================
+    function createOrder(event, form) {
+        event.preventDefault();
+
+        const ship = document.getElementById('dmShip').checked;
+        const cust = document.getElementById('customerID');
+        const prov = document.getElementById('province');
+        const addr = document.getElementById('address');
+        if (ship) {
+            if (!cust.value || cust.value === '0') {
+                alert('Giao hàng: vui lòng chọn khách hàng trong danh bạ (không dùng «Khách vãng lai»).');
+                return false;
+            }
+            if (!prov.value) {
+                alert('Giao hàng: vui lòng chọn tỉnh/thành.');
+                return false;
+            }
+            if (!addr.value || !addr.value.trim()) {
+                alert('Giao hàng: vui lòng nhập địa chỉ.');
+                return false;
+            }
+        }
+
+        const formData = new FormData(form);
+        if (prov && prov.disabled) prov.disabled = false;
+        if (addr && addr.disabled) addr.disabled = false;
+
+        fetch('/Order/CreateOrder', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async res => {
+            if (!res.ok) throw new Error();
+            return await res.json();
+        })
+        .then(data => {
+            if (data.code === 0) {
+                alert(data.message);
+            } else {
+                window.location.href = `/Order/Detail/${data.code}`;
+            }
+        })
+        .catch(() => alert('Lỗi tạo đơn hàng!'))
+        .finally(function () {
+            syncDeliveryModeUI();
+        });
+
+        return false;
+    }
+</script>
+}

@@ -1,0 +1,183 @@
+@model List<Lite.Shop.Models.Product>
+
+@{
+    ViewBag.Title = "Sản phẩm";
+
+    int page = 1;
+    int totalPages = 1;
+
+    if (ViewBag.Page != null)
+    {
+        page = (int)ViewBag.Page;
+    }
+
+    if (ViewBag.TotalPages != null)
+    {
+        totalPages = (int)ViewBag.TotalPages;
+    }
+
+    string search = ViewBag.Search ?? "";
+    string priceRange = ViewBag.PriceRange ?? "";
+    string categoryId = (ViewBag.CategoryId ?? 0).ToString();
+
+    Func<int, string> pageUrl = p =>
+    {
+        return $"?search={System.Net.WebUtility.UrlEncode(search)}&categoryId={categoryId}&priceRange={priceRange}&page={p}";
+    };
+
+    int start = page;
+    int end = Math.Min(page + 2, totalPages);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Sản phẩm</h2>
+</div>
+
+<form method="get" class="row g-2 mb-4 align-items-center">
+    <div class="col-md-3">
+        <input type="text" name="search" value="@search" class="form-control" placeholder="Tìm kiếm..." />
+    </div>
+
+    <div class="col-md-3">
+        <select name="categoryId" class="form-select">
+
+            @if (categoryId == "0")
+            {
+                <option value="0" selected>-- Danh mục --</option>
+            }
+            else
+            {
+                <option value="0">-- Danh mục --</option>
+            }
+
+            @if (categoryId == "1") { <option value="1" selected>May mặc</option> } else { <option value="1">May mặc</option> }
+            @if (categoryId == "2") { <option value="2" selected>Mỹ phẩm</option> } else { <option value="2">Mỹ phẩm</option> }
+            @if (categoryId == "3") { <option value="3" selected>Điện tử</option> } else { <option value="3">Điện tử</option> }
+            @if (categoryId == "4") { <option value="4" selected>Hàng gia dụng</option> } else { <option value="4">Hàng gia dụng</option> }
+            @if (categoryId == "5") { <option value="5" selected>Mẹ và Em bé</option> } else { <option value="5">Mẹ và Em bé</option> }
+            @if (categoryId == "6") { <option value="6" selected>Xe máy</option> } else { <option value="6">Xe máy</option> }
+            @if (categoryId == "7") { <option value="7" selected>Oto</option> } else { <option value="7">Oto</option> }
+            @if (categoryId == "9") { <option value="9" selected>Đồ chơi - phụ kiện</option> } else { <option value="9">Đồ chơi - phụ kiện</option> }
+            @if (categoryId == "10") { <option value="10" selected>Bàn ghế - nội thất</option> } else { <option value="10">Bàn ghế - nội thất</option> }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="priceRange" class="form-select">
+            @if (string.IsNullOrEmpty(priceRange))
+            {
+                <option value="" selected>-- Mức giá --</option>
+            }
+            else
+            {
+                <option value="">-- Mức giá --</option>
+            }
+
+            @if (priceRange == "1")
+            {
+                <option value="1" selected>Dưới 100k</option>
+            }
+            else
+            {
+                <option value="1">Dưới 100k</option>
+            }
+
+            @if (priceRange == "2")
+            {
+                <option value="2" selected>100k - 500k</option>
+            }
+            else
+            {
+                <option value="2">100k - 500k</option>
+            }
+
+            @if (priceRange == "3")
+            {
+                <option value="3" selected>Trên 500k</option>
+            }
+            else
+            {
+                <option value="3">Trên 500k</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button class="btn btn-primary">Áp dụng</button>
+        <a href="/Product/Index" class="btn btn-outline-secondary ms-2">Bỏ lọc</a>
+    </div>
+</form>
+
+<div class="row">
+    @if (Model != null && Model.Count > 0)
+    {
+        foreach (var item in Model)
+        {
+            var imgFile = string.IsNullOrWhiteSpace(item.Photo) ? "nophoto.png" : item.Photo;
+            var imgUrl = Url.Content("~/images/products/" + imgFile);
+
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@imgUrl" alt="" class="card-img-top" style="object-fit:cover; height:200px;" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title" style="min-height:48px; overflow:hidden;">@item.ProductName</h5>
+                        <p class="card-text text-primary fw-bold mb-3">@item.Price.ToString("N0") đ</p>
+
+                        <div class="mt-auto d-flex gap-2">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductID" class="btn btn-sm btn-outline-primary w-100">Xem</a>
+                            <a asp-controller="Cart" asp-action="Add" asp-route-productId="@item.ProductID" class="btn btn-sm btn-success w-100">Thêm</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info">Không có sản phẩm.</div>
+        </div>
+    }
+</div>
+
+@if (totalPages > 1)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(page == 1 ? "disabled" : "")">
+                <a class="page-link" href="@(page == 1 ? "#" : pageUrl(page - 1))">Trang trước</a>
+            </li>
+
+        @for (int q = start; q <= end; q++)
+        {
+            <li class="page-item @(q == page ? "active" : "")">
+                <a class="page-link" href="@pageUrl(q)">@q</a>
+            </li>
+        }
+
+        @{
+            int lastStart = Math.Max(end + 1, totalPages - 1);
+        }
+
+        @if (end < totalPages - 2)
+        {
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+        }
+
+        @for (int q = lastStart; q <= totalPages; q++)
+        {
+            if (q > end)
+            {
+                <li class="page-item @(q == page ? "active" : "")">
+                    <a class="page-link" href="@pageUrl(q)">@q</a>
+                </li>
+            }
+        }
+
+            <li class="page-item @(page == totalPages ? "disabled" : "")">
+                <a class="page-link" href="@(page == totalPages ? "#" : pageUrl(page + 1))">Trang sau</a>
+            </li>
+        </ul>
+    </nav>
+}

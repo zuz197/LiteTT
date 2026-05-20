@@ -1,0 +1,74 @@
+@model List<ProductAttribute>
+@{
+    Layout = null;
+    int productID = ViewBag.ProductID ?? (Model.FirstOrDefault()?.ProductID ?? 0);
+}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-success card-outline mt-4">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col">
+                        <h6 id="attributes" class="card-title mb-0">
+                            <i class="bi bi-list-check me-2"></i>
+                            Thuộc tính mặt hàng
+                        </h6>
+                    </div>
+                    <div class="col text-end">
+                        @if (productID > 0)
+                        {
+                            <a class="btn btn-sm btn-primary" href="~/Product/CreateAttribute/@productID">
+                                <i class="bi bi-plus"></i>
+                                Thêm thuộc tính
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Lưu mặt hàng trước để thêm thuộc tính</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-1">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Tên thuộc tính</th>
+                            <th>Giá trị</th>
+                            <th style="width:120px" class="text-center">Thứ tự</th>
+                            <th style="width:100px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Chưa có thuộc tính</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model.OrderBy(x => x.DisplayOrder))
+                            {
+                                <tr>
+                                    <td>@item.AttributeName</td>
+                                    <td>@item.AttributeValue</td>
+                                    <td class="text-center">@item.DisplayOrder</td>
+                                    <td class="text-center text-nowrap">
+                                        <a class="btn btn-sm btn-primary" href="~/Product/EditAttribute/@productID?attributeId=@item.AttributeID">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-danger" href="~/Product/DeleteAttribute/@productID?attributeId=@item.AttributeID">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>BusinessLayers</AssemblyName>
+    <RootNamespace>BusinessLayers</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lite.DataLayers\Lite.DataLayers.csproj" />
+    <ProjectReference Include="..\Lite.Models\Lite.Models.csproj" />
+  </ItemGroup>
+</Project>

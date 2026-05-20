@@ -1,0 +1,66 @@
+<h2>Xác thực OTP</h2>
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <p class="text-center text-muted mb-3">
+                    Mã OTP đã được gửi về email của bạn.<br />
+                    <small>Mã có hiệu lực trong <strong>5 phút</strong>.</small>
+                </p>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i>@ViewBag.Error
+                    </div>
+                }
+
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-1"></i>@TempData["Message"]
+                    </div>
+                }
+
+                <form method="post">
+                    <div class="mb-3">
+                        <input type="text"
+                               name="otp"
+                               class="form-control text-center"
+                               placeholder="Nhập mã 6 số"
+                               maxlength="6"
+                               autocomplete="one-time-code"
+                               autofocus
+                               style="font-size:24px;letter-spacing:8px;font-weight:bold;" />
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Xác nhận
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center">
+                    <form asp-action="ResendOtp" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link btn-sm text-muted">
+                            Gửi lại mã OTP
+                        </button>
+                    </form>
+                    <span class="text-muted mx-2">|</span>
+                    <a asp-action="Login" class="btn btn-link btn-sm text-muted">
+                        Quay lại đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelector('input[name="otp"]').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+</script>
+}

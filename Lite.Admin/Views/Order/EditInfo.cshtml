@@ -1,0 +1,71 @@
+@model Lite.Admin.Models.OrderEditInfoFormModel
+@{
+    Layout = null;
+    string? errorMessage = ViewBag.ErrorMessage as string;
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="modal-header text-bg-warning">
+        <strong class="modal-title">Không thể thực hiện</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-warning d-flex align-items-center mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @errorMessage
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </button>
+    </div>
+}
+else
+{
+    <form asp-controller="Order" asp-action="EditInfoConfirm" asp-route-id="@Model.OrderID" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="OrderID" value="@Model.OrderID" />
+        <div class="modal-header text-bg-primary">
+            <strong class="modal-title">Cập nhật thông tin giao hàng</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-light border mb-3">
+                <i class="bi bi-info-circle me-2"></i>
+                Chỉ cập nhật <strong>địa chỉ/tỉnh thành giao</strong> cho đơn này. Không ảnh hưởng hồ sơ khách hàng.
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Tỉnh / Thành giao</label>
+                    <select name="DeliveryProvince" class="form-select" required>
+                        <option value="">-- Chọn tỉnh/thành --</option>
+                        @foreach (var p in Model.Provinces)
+                        {
+                            var selected = string.Equals(Model.DeliveryProvince, p.ProvinceName, StringComparison.OrdinalIgnoreCase);
+                            if (selected)
+                            {
+                                <option value="@p.ProvinceName" selected>@p.ProvinceName</option>
+                            }
+                            else
+                            {
+                                <option value="@p.ProvinceName">@p.ProvinceName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Địa chỉ giao</label>
+                    <textarea name="DeliveryAddress" class="form-control" rows="3" required>@Model.DeliveryAddress</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Lưu thay đổi
+            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </form>
+}

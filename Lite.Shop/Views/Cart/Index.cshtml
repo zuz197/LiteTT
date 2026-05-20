@@ -1,0 +1,188 @@
+@model List<Lite.Shop.Models.CartItem>
+
+@{
+    ViewBag.Title = "Giỏ hàng";
+    decimal total = 0;
+    var customer = ViewBag.Customer as Lite.Shop.Models.Customer;
+}
+
+<div class="container mt-4">
+    <h3 class="text-primary mb-4">🛒 Giỏ hàng của bạn</h3>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+            Giỏ hàng của bạn đang trống.
+        </div>
+        <div class="text-center mt-3">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-primary">
+                Tiếp tục mua sắm
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th style="width:150px;">Giá</th>
+                            <th style="width:120px;">Số lượng</th>
+                            <th style="width:180px;">Thành tiền</th>
+                            <th style="width:100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var sub = item.Price * item.Quantity;
+                            total += sub;
+                            <tr>
+                                <td><a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductID" class="text-decoration-none text-dark fw-bold">@item.ProductName</a></td>
+                                <td class="text-end">@item.Price.ToString("N0") đ</td>
+                                <td class="text-center">
+                                    <form asp-controller="Cart" asp-action="Update" method="post" class="d-flex justify-content-center">
+                                        <input type="hidden" name="productId" value="@item.ProductID" />
+                                        <input type="number" name="quantity" value="@item.Quantity" min="1"
+                                               class="form-control form-control-sm text-center" style="width:70px;" />
+                                        <button class="btn btn-sm btn-outline-primary ms-1">✔</button>
+                                    </form>
+                                </td>
+                                <td class="text-end text-danger fw-bold">@sub.ToString("N0") đ</td>
+                                <td class="text-center">
+                                    <form asp-controller="Cart" asp-action="Remove" method="post">
+                                        <input type="hidden" name="productId" value="@item.ProductID" />
+                                        <button class="btn btn-danger btn-sm">Xoá</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6 d-flex gap-2 align-items-center">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-outline-secondary btn-sm px-3">
+                    ← Tiếp tục mua
+                </a>
+                <form asp-controller="Cart" asp-action="ClearCart" method="post"
+                      onsubmit="return confirm('Bạn có chắc muốn xoá toàn bộ giỏ hàng?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xoá giỏ hàng
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <h4 class="text-danger mb-3">Tổng tiền: @total.ToString("N0") đ</h4>
+                <button type="button" class="btn btn-success btn-lg px-4"
+                        onclick="document.getElementById('confirmModal').style.display='flex'">
+                    🛒 Đặt hàng
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model != null && Model.Count > 0)
+{
+    <div id="confirmModal"
+         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:#fff;border-radius:12px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="mb-0 fw-bold">📋 Xác nhận đặt hàng</h5>
+                <button onclick="document.getElementById('confirmModal').style.display='none'"
+                        style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+
+            <div class="p-3">
+                <div class="card mb-3">
+                    <div class="card-header fw-bold bg-light">👤 Thông tin giao hàng</div>
+                    <div class="card-body pb-2">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted">Họ tên</small>
+                                <div class="fw-semibold">@(customer?.CustomerName ?? "-")</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Số điện thoại</small>
+                                <div class="fw-semibold">@(customer?.Phone ?? "-")</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Địa chỉ</small>
+                                <div class="fw-semibold">@(customer?.Address ?? "-")</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Tỉnh / Thành</small>
+                                <div class="fw-semibold">@(customer?.Province ?? "-")</div>
+                            </div>
+                        </div>
+                        @if (string.IsNullOrWhiteSpace(customer?.Address) || string.IsNullOrWhiteSpace(customer?.Phone))
+                        {
+                            <div class="alert alert-warning mt-2 mb-0 py-2">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Thông tin giao hàng chưa đầy đủ.
+                                <a asp-controller="Account" asp-action="Profile" class="alert-link">Cập nhật ngay</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header fw-bold bg-light">🛍 Sản phẩm đặt mua</div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead class="table-primary text-center">
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th style="width:80px">SL</th>
+                                    <th style="width:130px">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.ProductName</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end text-danger fw-bold">
+                                            @((item.Price * item.Quantity).ToString("N0")) đ
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="text-end mb-3">
+                    <h5 class="text-danger">Tổng tiền: @total.ToString("N0") đ</h5>
+                </div>
+
+                <div class="d-flex justify-content-between gap-2">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('confirmModal').style.display='none'">
+                        ← Quay lại
+                    </button>
+                    <form asp-controller="Order" asp-action="Checkout" method="post">
+                        <button type="submit" class="btn btn-success px-4">
+                             Xác nhận đặt hàng
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    document.getElementById("confirmModal")?.addEventListener("click", function(e) {
+        if (e.target === this) this.style.display = "none";
+    });
+</script>
+}

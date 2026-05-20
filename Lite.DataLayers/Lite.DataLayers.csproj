@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Lite.DataLayers</AssemblyName>
+    <RootNamespace>Lite.DataLayers</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="DataLayers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lite.Models\Lite.Models.csproj" />
+  </ItemGroup>
+</Project>

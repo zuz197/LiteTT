@@ -1,0 +1,47 @@
+@model PaginationSearchInput
+@{
+    ViewBag.Title = "Quản lý Nhà cung cấp";
+}
+@if (TempData["DeleteError"] is string delErr && !string.IsNullOrWhiteSpace(delErr))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @delErr
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+}
+@section PageToolBar {
+    <a href="~/Supplier/Create" class="btn btn-primary d-flex align-items-center ms-1">
+        <i class="bi bi-plus-circle me-1"></i>
+        Bổ sung
+    </a>
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="formSearch"
+              method="get"
+              action="~/Supplier/Search"
+              data-target="searchResult"
+              onsubmit="paginationSearch(event, this, 1)">
+            <div class="input-group">
+                <input type="hidden" asp-for="PageSize" />
+                <input type="text"
+                       class="form-control"
+                       asp-for="SearchValue"
+                       placeholder="Tên nhà cung cấp..." autofocus />
+                <button class="btn btn-info d-flex align-items-center">
+                    <i class="bi bi-search me-1"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResult"></div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            paginationSearch(null, document.getElementById("formSearch"), @Model.Page);
+        });
+    </script>
+}

@@ -1,0 +1,62 @@
+@model ProductPhoto
+@{
+    ViewBag.Title = "Xóa ảnh mặt hàng";
+}
+@section PageToolBar {
+    <button type="submit" form="formDelete" class="btn btn-danger">
+        <i class="bi bi-trash me-1"></i>
+        Xóa
+    </button>
+    <a href="~/Product/Edit/@Model.ProductID#photos" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card card-danger card-outline">
+            <div class="card-header">
+                <h5 class="card-title mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Xác nhận xóa ảnh
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="formDelete" method="post" action="~/Product/DeletePhoto/@Model.ProductID?photoId=@Model.PhotoID">
+                    <div class="alert alert-warning d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Bạn có chắc chắn muốn xóa ảnh này không?
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="~/images/products/@(string.IsNullOrWhiteSpace(Model.Photo) ? "nophoto.png" : Model.Photo)"
+                                 class="img-thumbnail"
+                                 style="max-height:220px;" />
+                        </div>
+                        <div class="col-md-8">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Tên file</dt>
+                                <dd class="col-sm-8">@Model.Photo</dd>
+                                <dt class="col-sm-4">Mô tả</dt>
+                                <dd class="col-sm-8">@Model.Description</dd>
+                                <dt class="col-sm-4">Thứ tự</dt>
+                                <dd class="col-sm-8">@Model.DisplayOrder</dd>
+                                <dt class="col-sm-4">Trạng thái</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.IsHidden)
+                                    {
+                                        <span class="badge bg-secondary">Ẩn</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Hiện</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

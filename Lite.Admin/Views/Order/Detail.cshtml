@@ -1,0 +1,394 @@
+@model Lite.Models.Sales.OrderViewInfo
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+    var returnReq = ViewBag.ReturnRequest as Lite.Models.Sales.ReturnRequest;
+    var orderDetails = ViewBag.OrderDetails as List<Lite.Models.Sales.OrderDetailViewInfo> ?? new List<Lite.Models.Sales.OrderDetailViewInfo>();
+    decimal total = orderDetails.Sum(x => x.Quantity * x.SalePrice);
+    string statusText = Model.Status switch
+    {
+        Lite.Models.Sales.OrderStatusEnum.New => "Chờ duyệt",
+        Lite.Models.Sales.OrderStatusEnum.Accepted => "Đã duyệt",
+        Lite.Models.Sales.OrderStatusEnum.Shipping => "Đang giao",
+        Lite.Models.Sales.OrderStatusEnum.Completed => "Hoàn tất",
+        Lite.Models.Sales.OrderStatusEnum.Cancelled => "Bị hủy",
+        Lite.Models.Sales.OrderStatusEnum.Rejected => "Bị từ chối",
+        _ => "Không xác định"
+    };
+}
+
+@if (TempData["OrderError"] is string orderErr && !string.IsNullOrWhiteSpace(orderErr))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @orderErr
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+}
+
+@{
+    bool isDeliveryOrder = !string.IsNullOrWhiteSpace(Model.DeliveryAddress)
+        && !(Model.DeliveryAddress.Contains("không giao", StringComparison.OrdinalIgnoreCase));
+}
+
+@section PageToolBar {
+    <div class="btn-group">
+        <button type="button"
+                class="btn btn-primary dropdown-toggle"
+                data-bs-toggle="dropdown">
+            <i class="bi bi-gear me-1"></i>
+            Xử lý đơn hàng
+        </button>
+        <ul class="dropdown-menu">
+            @if (Model.Status == Lite.Models.Sales.OrderStatusEnum.New)
+            {
+                @if (isDeliveryOrder)
+                {
+                    <li>
+                        <a class="dropdown-item open-modal" href="~/Order/EditInfo/@Model.OrderID">Sửa thông tin giao hàng</a>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <span class="dropdown-item disabled text-muted" title="Đơn bán tại chỗ không có thông tin giao hàng">
+                            Sửa thông tin giao hàng
+                        </span>
+                    </li>
+                }
+                <li><a class="dropdown-item" href="~/Order/Accept/@Model.OrderID">Chấp nhận đơn</a></li>
+                <li>
+                    <a class="dropdown-item open-modal" href="~/Order/Reject/@Model.OrderID">Từ chối đơn</a>
+                </li>
+            }
+            @if (Model.Status == Lite.Models.Sales.OrderStatusEnum.Accepted)
+            {
+                @if (isDeliveryOrder)
+                {
+                    <li>
+                        <a class="dropdown-item open-modal" href="~/Order/EditInfo/@Model.OrderID">Sửa thông tin giao hàng</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item open-modal" href="~/Order/Shipping/@Model.OrderID">Giao hàng (chọn shipper)</a>
+                    </li>
+                    <li>
+                        <span class="dropdown-item disabled text-muted" title="Đơn cần giao — phải chọn shipper trước">
+                            Hoàn tất (đơn không cần ship)
+                        </span>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <span class="dropdown-item disabled text-muted" title="Đơn bán tại chỗ không có thông tin giao hàng">
+                            Sửa thông tin giao hàng
+                        </span>
+                    </li>
+                    <li>
+                        <span class="dropdown-item disabled text-muted" title="Đơn bán tại chỗ — không cần chọn shipper">
+                            Giao hàng (chọn shipper)
+                        </span>
+                    </li>
+                    <li>
+                        <a class="dropdown-item open-modal" href="~/Order/Finish/@Model.OrderID">Hoàn tất (đơn không cần ship)</a>
+                    </li>
+                }
+                <li>
+                    <a class="dropdown-item open-modal" href="~/Order/Cancel/@Model.OrderID">Hủy đơn hàng</a>
+                </li>
+            }
+            @if (Model.Status == Lite.Models.Sales.OrderStatusEnum.Shipping)
+            {
+                <li>
+                    <a class="dropdown-item open-modal" href="~/Order/Finish/@Model.OrderID">Xác nhận hoàn tất</a>
+                </li>
+                <li>
+                    <a class="dropdown-item open-modal" href="~/Order/Cancel/@Model.OrderID">Hủy đơn (không giao được / khách không nhận)</a>
+                </li>
+                <li>
+                    <a class="dropdown-item open-modal" href="~/Order/RecallFromShipping/@Model.OrderID">Thu hồi — giao lại (đổi shipper)</a>
+                </li>
+            }
+            @if (Model.Status == Lite.Models.Sales.OrderStatusEnum.Completed && returnReq != null && (returnReq.Status == 1 || returnReq.Status == 2 || returnReq.Status == 3))
+            {
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <a class="dropdown-item open-modal fw-bold text-warning"
+                       href="~/Order/ReturnDetail/@Model.OrderID">
+                        @(returnReq.Type == "Refund" ? "🔄 Xử lý hoàn hàng" : "🔁 Xử lý đổi hàng")
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+
+    @if (Model.Status == Lite.Models.Sales.OrderStatusEnum.New ||
+         Model.Status == Lite.Models.Sales.OrderStatusEnum.Accepted)
+    {
+        <form method="post" action="~/Order/Delete" class="d-inline">
+            <input type="hidden" name="orderID" value="@Model.OrderID" />
+            <button type="submit" class="btn btn-danger ms-1">
+                <i class="bi bi-trash"></i>
+                Xóa
+            </button>
+        </form>
+    }
+
+    <a href="~/Order" class="btn btn-secondary ms-1">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+    </a>
+}
+
+<!-- TRẠNG THÁI ĐƠN HÀNG -->
+<div class="alert alert-success d-flex align-items-center mb-3">
+    <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+    <div>
+        <strong>Trạng thái đơn hàng:</strong>
+        @statusText
+        @if (Model.FinishedTime.HasValue)
+        {
+            <span> lúc <b>@Model.FinishedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</b></span>
+        }
+    </div>
+</div>
+
+<!-- THÔNG TIN ĐƠN HÀNG -->
+<div class="card card-primary card-outline mb-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-receipt me-2"></i>
+            Thông tin đơn hàng
+        </h5>
+    </div>
+
+    <div class="card-body ps-4 pe-4">
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Mã đơn hàng</div>
+            <div class="col-md-3">@Model.OrderID</div>
+
+            <div class="col-md-3 fw-bold">Ngày lập</div>
+            <div class="col-md-3">@Model.OrderTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 fw-bold">Nhân viên phụ trách</div>
+            <div class="col-md-3">@(string.IsNullOrWhiteSpace(Model.EmployeeName) ? "-" : Model.EmployeeName)</div>
+
+            <div class="col-md-3 fw-bold">Ngày nhận đơn</div>
+            <div class="col-md-3">@(Model.AcceptTime?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</div>
+        </div>
+    </div>
+</div>
+
+<!-- THÔNG TIN KHÁCH HÀNG -->
+<div class="card card-info card-outline mb-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-person me-2"></i>
+            Thông tin khách hàng
+        </h5>
+    </div>
+
+    <div class="card-body ps-4 pe-4">
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Khách hàng</div>
+            <div class="col-md-3">@(string.IsNullOrWhiteSpace(Model.CustomerName) ? "Khách lẻ" : Model.CustomerName)</div>
+
+            <div class="col-md-3 fw-bold">Tên giao dịch</div>
+            <div class="col-md-3">@(string.IsNullOrWhiteSpace(Model.CustomerContactName) ? "-" : Model.CustomerContactName)</div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Email</div>
+            <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.CustomerEmail) ? "-" : Model.CustomerEmail)</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 fw-bold">Địa chỉ</div>
+            <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.CustomerAddress) ? "-" : Model.CustomerAddress)</div>
+        </div>
+    </div>
+</div>
+
+<!-- THÔNG TIN GIAO HÀNG -->
+<div class="card card-success card-outline mb-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-truck me-2"></i>
+            Thông tin giao hàng
+        </h5>
+    </div>
+
+    <div class="card-body ps-4 pe-4">
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Người giao hàng</div>
+            <div class="col-md-3">@(string.IsNullOrWhiteSpace(Model.ShipperName) ? "-" : Model.ShipperName)</div>
+
+            <div class="col-md-3 fw-bold">Điện thoại</div>
+            <div class="col-md-3">@(string.IsNullOrWhiteSpace(Model.ShipperPhone) ? "-" : Model.ShipperPhone)</div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-md-3 fw-bold">Địa chỉ giao hàng</div>
+            <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.DeliveryAddress) ? "-" : Model.DeliveryAddress)</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 fw-bold">Tỉnh / Thành</div>
+            <div class="col-md-9">@(string.IsNullOrWhiteSpace(Model.DeliveryProvince) ? "-" : Model.DeliveryProvince)</div>
+        </div>
+    </div>
+</div>
+
+<!-- DANH SÁCH MẶT HÀNG -->
+<div class="card card-secondary card-outline">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-box-seam me-2"></i>
+            Danh sách mặt hàng
+        </h5>
+    </div>
+
+    <div class="card-body table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-secondary text-center">
+                <tr>
+                    <th>STT</th>
+                    <th>Tên hàng</th>
+                    <th>ĐVT</th>
+                    <th>Số lượng</th>
+                    <th>Giá</th>
+                    <th>Thành tiền</th>
+                    <th style="width:90px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (orderDetails.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Đơn hàng chưa có mặt hàng</td>
+                    </tr>
+                }
+                else
+                {
+                    int stt = 0;
+                    foreach (var item in orderDetails)
+                    {
+                        stt++;
+                        <tr>
+                            <td class="text-center">@stt</td>
+                            <td>@item.ProductName</td>
+                            <td class="text-center">@item.Unit</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.SalePrice.ToString("N0")</td>
+                            <td class="text-end">@((item.Quantity * item.SalePrice).ToString("N0"))</td>
+                            <td></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="5" class="text-end">Tổng cộng</th>
+                    <th class="text-end">@total.ToString("N0")</th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@if (returnReq != null)
+{
+    <div class="card card-warning card-outline mt-3">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                @(returnReq.Type == "Refund" ? "🔄 Yêu cầu hoàn hàng" : "🔁 Yêu cầu đổi hàng")
+                <span class="badge ms-2 @(returnReq.Status == 1 ? "bg-warning text-dark" : returnReq.Status == 4 ? "bg-success" : returnReq.Status == -1 ? "bg-danger" : "bg-primary")">
+                    @(returnReq.Status switch { 1 => "Chờ duyệt", 2 => "Đã duyệt", 3 => "Đang xử lý", 4 => "Hoàn tất", -1 => "Từ chối", _ => "-" })
+                </span>
+            </h5>
+        </div>
+        <div class="card-body ps-4 pe-4">
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Loại yêu cầu</div>
+                <div class="col-md-9">@(returnReq.Type == "Refund" ? "Hoàn hàng" : "Đổi hàng")</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Lý do</div>
+                <div class="col-md-9">@(returnReq.Reason ?? "-")</div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(returnReq.RejectReason))
+            {
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold text-danger">Lý do từ chối</div>
+                    <div class="col-md-9 text-danger">@returnReq.RejectReason</div>
+                </div>
+            }
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Thời gian</div>
+                <div class="col-md-9">
+                    <ul class="list-unstyled mb-0">
+                        <li>📝 Gửi yêu cầu: <strong>@returnReq.RequestTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></li>
+                        @if (returnReq.ApprovedTime.HasValue)
+                        {
+                            <li>@(returnReq.Status == -1 ? "🚫 Từ chối" : "✅ Duyệt"): <strong>@returnReq.ApprovedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></li>
+                        }
+                        @if (returnReq.ShippedTime.HasValue)
+                        {
+                            <li>🚚 @(returnReq.Type == "Refund" ? "Shipper đến lấy/trả tiền" : "Giao hàng mới"): <strong>@returnReq.ShippedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></li>
+                        }
+                        @if (returnReq.CompletedTime.HasValue)
+                        {
+                            <li>🎉 Hoàn tất: <strong>@returnReq.CompletedTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            @if (returnReq.Photos.Count > 0)
+            {
+                <div class="row">
+                    <div class="col-md-3 fw-bold">Ảnh đính kèm</div>
+                    <div class="col-md-9">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var photo in returnReq.Photos)
+                            {
+                                <img src="/images/returns/@photo"
+                                     onclick="showReturnPhoto('/images/returns/@photo')"
+                                     style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd;cursor:pointer;"
+                                     title="Nhấn để xem ảnh lớn" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Modal xem ảnh -->
+<div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <img id="photoModalImg" src="" style="max-width:90vw;max-height:80vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);" />
+    <button onclick="document.getElementById('photoModal').style.display='none'" class="btn btn-secondary">
+        ← Quay lại
+    </button>
+</div>
+
+@section Scripts {
+<script>
+function showReturnPhoto(src) {
+    document.getElementById("photoModalImg").src = src;
+    document.getElementById("photoModal").style.display = "flex";
+}
+document.getElementById("photoModal")?.addEventListener("click", function(e) {
+    if (e.target === this) this.style.display = "none";
+});
+</script>
+}
+
+@section Styles {
+    <style>
+        .card-body .row {
+            border-bottom: 1px dotted #646464;
+        }
+    </style>
+}

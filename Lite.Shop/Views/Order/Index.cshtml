@@ -1,0 +1,110 @@
+@model List<Lite.Shop.Models.Order>
+
+@{
+    ViewBag.Title = "Đơn hàng của tôi";
+}
+
+<div class="container mt-4">
+    <h3 class="text-primary mb-4">📦 Lịch sử đơn hàng</h3>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info text-center">
+            Bạn chưa có đơn hàng nào.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Thời gian đặt</th>
+                            <th>Địa chỉ</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center">@item.OrderID</td>
+
+                                <td class="text-center">
+                                    @(item.OrderTime.HasValue 
+                                        ? item.OrderTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") 
+                                        : "")
+                                </td>
+
+                                <td>@item.DeliveryAddress</td>
+
+                                <td class="text-center">
+                                    @switch (item.Status)
+                                    {
+                                        case 1:
+                                            <span class="badge bg-warning text-dark">Mới tạo</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-warning text-dark">Đã chấp nhận</span>
+                                            break;
+                                        case 3:
+                                            <span class="badge bg-info text-dark">Đang giao</span>
+                                            break;
+                                        case 4:
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                            break;
+                                        case -1:
+                                            <span class="badge bg-danger">Đã huỷ</span>
+                                            break;
+                                        case -2:
+                                            <span class="badge bg-secondary">Bị từ chối</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">Không xác định</span>
+                                            break;
+                                    }
+                                    @if (item.ReturnStatus.HasValue)
+                                    {
+                                        <br />
+                                        bool isRefund = item.ReturnType == "Refund";
+                                        @if (item.ReturnStatus == 1)
+                                        {
+                                            <span class="badge bg-warning text-dark mt-1">@(isRefund ? "🔄 Chờ duyệt hoàn" : "🔁 Chờ duyệt đổi")</span>
+                                        }
+                                        else if (item.ReturnStatus == 2)
+                                        {
+                                            <span class="badge bg-primary mt-1">@(isRefund ? "🔄 Đã duyệt hoàn" : "🔁 Đã duyệt đổi")</span>
+                                        }
+                                        else if (item.ReturnStatus == 3)
+                                        {
+                                            <span class="badge bg-info text-dark mt-1">@(isRefund ? "🔄 Đang xử lý" : "🔁 Đang xử lý")</span>
+                                        }
+                                        else if (item.ReturnStatus == 4)
+                                        {
+                                            <span class="badge bg-success mt-1">@(isRefund ? "🔄 Hoàn hàng xong" : "🔁 Đổi hàng xong")</span>
+                                        }
+                                        else if (item.ReturnStatus == -1)
+                                        {
+                                            <span class="badge bg-secondary mt-1">@(isRefund ? "🔄 Hoàn bị từ chối" : "🔁 Đổi bị từ chối")</span>
+                                        }
+                                    }
+                                </td>
+
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.OrderID"
+                                       class="btn btn-sm btn-primary">
+                                        Xem
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
