@@ -127,6 +127,7 @@ namespace Lite.Admin.Controllers
         /// <returns></returns>
         public async Task<IActionResult> SearchProduct(ProductSearchInput input)
         {
+            input.OnlySelling = true; // Chỉ hiển thị sản phẩm đang bán khi lập đơn
             var result = await CatalogDataService.ListProductsAsync(input);
             ApplicationContext.SetSessionData(SEARCH_PRODUCT, input);
             return View(result);

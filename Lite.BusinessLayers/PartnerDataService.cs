@@ -323,7 +323,7 @@ public static class PartnerDataService
     public static async Task<bool> ValidateSupplierEmailAsync(string email, int supplierID = 0)
     {
         email = (email ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(email))    
             return false;
 
         using var connection = new SqlConnection(Configuration.ConnectionString);
